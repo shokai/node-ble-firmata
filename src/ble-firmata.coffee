@@ -48,7 +48,7 @@ exports = module.exports = class BLEFirmata extends events.EventEmitter2
 
     @once 'boardReady', ->
       debug 'boardReady'
-      io_init_wait = 3000
+      io_init_wait = 100
       debug "wait #{io_init_wait}(msec)"
       setTimeout =>
         for i in [0...6]
