@@ -4,7 +4,7 @@ var ArduinoFirmata = require(__dirname+'/../');
 var arduino = new ArduinoFirmata().connect();
 
 arduino.on('connect', function(){
-  console.log("connect!! "+arduino.serialport_name);
+  console.log("connect!!");
   console.log("board version: "+arduino.boardVersion);
 
   setInterval(function(){
