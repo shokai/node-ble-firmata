@@ -1,4 +1,22 @@
 /*
+ *    BLEFirmataSketch
+ *
+ *    This sketch is for the BLE Arduino App
+ *    It is a modified version of the Standard Firmata
+ *    sketch by adding support for BLE.
+ *
+ */
+
+#define BLE_NAME "BlendMicro"
+
+#include <boards.h>
+#include <SPI.h>
+#include <Servo.h>
+#include <Wire.h>
+#include "BLEFirmata.h"
+#include <RBL_nRF8001.h>
+
+/*
  * Firmata is a generic protocol for communicating with microcontrollers
  * from software on a host computer. It is intended to work with
  * any host computer software package.
@@ -14,7 +32,6 @@
   Copyright (C) 2010-2011 Paul Stoffregen.  All rights reserved.
   Copyright (C) 2009 Shigeru Kobayashi.  All rights reserved.
   Copyright (C) 2009-2011 Jeff Hoefs.  All rights reserved.
-  Copyright (C) 2013 Sho Hashimoto.  All rights reserved.
   
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -29,10 +46,6 @@
 /* 
  * TODO: use Program Control to load stored profiles from EEPROM
  */
-
-#include <Servo.h>
-#include <Wire.h>
-#include <Firmata.h>
 
 // move the following defines to Firmata.h?
 #define I2C_WRITE B00000000
@@ -66,7 +79,7 @@ int pinState[TOTAL_PINS];           // any value that has been written
 /* timer variables */
 unsigned long currentMillis;        // store the current value from millis()
 unsigned long previousMillis;       // for comparison with currentMillis
-int samplingInterval = 19;          // how often to run the main loop (in ms)
+int samplingInterval = 38;          // how often to run the main loop (in ms)
 
 /* i2c data */
 struct i2c_device_info {
@@ -121,23 +134,24 @@ void readAndReportData(byte address, int theRegister, byte numBytes) {
   }
   else {
     if(numBytes > Wire.available()) {
-      Firmata.sendString("I2C Read Error: Too many bytes received");
+      BleFirmata.sendString("I2C Read Error: Too many bytes received");
     } else {
-      Firmata.sendString("I2C Read Error: Too few bytes received"); 
+      BleFirmata.sendString("I2C Read Error: Too few bytes received"); 
     }
   }
 
   // send slave address, register and received bytes
-  Firmata.sendSysex(SYSEX_I2C_REPLY, numBytes + 2, i2cRxData);
+  BleFirmata.sendSysex(SYSEX_I2C_REPLY, numBytes + 2, i2cRxData);
 }
 
 void outputPort(byte portNumber, byte portValue, byte forceSend)
 {
   // pins not configured as INPUT are cleared to zeros
   portValue = portValue & portConfigInputs[portNumber];
+  
   // only send if the value is different than previously sent
   if(forceSend || previousPINs[portNumber] != portValue) {
-    Firmata.sendDigitalPort(portNumber, portValue);
+    BleFirmata.sendDigitalPort(portNumber, portValue);
     previousPINs[portNumber] = portValue;
   }
 }
@@ -149,7 +163,7 @@ void checkDigitalInputs(void)
 {
   /* Using non-looping code allows constants to be given to readPort().
    * The compiler will apply substantial optimizations if the inputs
-   * to readPort() are compile-time constants. */
+   * to readPort() are compile-time constants. */  
   if (TOTAL_PORTS > 0 && reportPINs[0]) outputPort(0, readPort(0, portConfigInputs[0]), false);
   if (TOTAL_PORTS > 1 && reportPINs[1]) outputPort(1, readPort(1, portConfigInputs[1]), false);
   if (TOTAL_PORTS > 2 && reportPINs[2]) outputPort(2, readPort(2, portConfigInputs[2]), false);
@@ -204,10 +218,16 @@ void setPinModeCallback(byte pin, int mode)
     }
     break;
   case INPUT:
-    if (IS_PIN_DIGITAL(pin)) {
+    if (IS_PIN_DIGITAL(pin)) {      
       pinMode(PIN_TO_DIGITAL(pin), INPUT); // disable output driver
+      
+      // Select your internal pull-up here
       digitalWrite(PIN_TO_DIGITAL(pin), LOW); // disable internal pull-ups
+      //digitalWrite(PIN_TO_DIGITAL(pin), HIGH); // enable internal pull-ups if you have only a wire to test
       pinConfig[pin] = INPUT;
+      
+      // hack it only
+      reportPINs[pin/8] |= (1 << (pin & 7));
     }
     break;
   case OUTPUT:
@@ -240,7 +260,7 @@ void setPinModeCallback(byte pin, int mode)
     }
     break;
   default:
-    Firmata.sendString("Unknown pin mode"); // TODO: put error msgs in EEPROM
+    BleFirmata.sendString("Unknown pin mode"); // TODO: put error msgs in EEPROM
   }
   // TODO: save status to EEPROM here, if changed
 }
@@ -338,7 +358,6 @@ void sysexCallback(byte command, byte argc, byte *argv)
     blink_pin = argv[0];
     blink_count = argv[1];
     delayTime = argv[2] * 100;
-
     pinMode(blink_pin, OUTPUT);
     byte i;
     for(i = 0; i < blink_count; i++){
@@ -347,12 +366,12 @@ void sysexCallback(byte command, byte argc, byte *argv)
       digitalWrite(blink_pin, false);
       delay(delayTime);
     }
-    Firmata.sendSysex(command, argc, argv); // callback
+    BleFirmata.sendSysex(command, argc, argv); // callback
     break;
   case I2C_REQUEST:
     mode = argv[1] & I2C_READ_WRITE_MODE_MASK;
     if (argv[1] & I2C_10BIT_ADDRESS_MODE_MASK) {
-      Firmata.sendString("10-bit addressing mode is not yet supported");
+      BleFirmata.sendString("10-bit addressing mode is not yet supported");
       return;
     }
     else {
@@ -389,7 +408,7 @@ void sysexCallback(byte command, byte argc, byte *argv)
     case I2C_READ_CONTINUOUSLY:
       if ((queryIndex + 1) >= MAX_QUERIES) {
         // too many queries, just ignore
-        Firmata.sendString("too many queries");
+        BleFirmata.sendString("too many queries");
         break;
       }
       queryIndex++;
@@ -474,57 +493,57 @@ void sysexCallback(byte command, byte argc, byte *argv)
     }
     break;
   case CAPABILITY_QUERY:
-    Serial.write(START_SYSEX);
-    Serial.write(CAPABILITY_RESPONSE);
+    ble_write(START_SYSEX);
+    ble_write(CAPABILITY_RESPONSE);
     for (byte pin=0; pin < TOTAL_PINS; pin++) {
       if (IS_PIN_DIGITAL(pin)) {
-        Serial.write((byte)INPUT);
-        Serial.write(1);
-        Serial.write((byte)OUTPUT);
-        Serial.write(1);
+        ble_write((byte)INPUT);
+        ble_write(1);
+        ble_write((byte)OUTPUT);
+        ble_write(1);
       }
       if (IS_PIN_ANALOG(pin)) {
-        Serial.write(ANALOG);
-        Serial.write(10);
+        ble_write(ANALOG);
+        ble_write(10);
       }
       if (IS_PIN_PWM(pin)) {
-        Serial.write(PWM);
-        Serial.write(8);
+        ble_write(PWM);
+        ble_write(8);
       }
       if (IS_PIN_SERVO(pin)) {
-        Serial.write(SERVO);
-        Serial.write(14);
+        ble_write(SERVO);
+        ble_write(14);
       }
       if (IS_PIN_I2C(pin)) {
-        Serial.write(I2C);
-        Serial.write(1);  // to do: determine appropriate value 
+        ble_write(I2C);
+        ble_write(1);  // to do: determine appropriate value 
       }
-      Serial.write(127);
+      ble_write(127);
     }
-    Serial.write(END_SYSEX);
+    ble_write(END_SYSEX);
     break;
   case PIN_STATE_QUERY:
     if (argc > 0) {
       byte pin=argv[0];
-      Serial.write(START_SYSEX);
-      Serial.write(PIN_STATE_RESPONSE);
-      Serial.write(pin);
+      ble_write(START_SYSEX);
+      ble_write(PIN_STATE_RESPONSE);
+      ble_write(pin);
       if (pin < TOTAL_PINS) {
-        Serial.write((byte)pinConfig[pin]);
-	Serial.write((byte)pinState[pin] & 0x7F);
-	if (pinState[pin] & 0xFF80) Serial.write((byte)(pinState[pin] >> 7) & 0x7F);
-	if (pinState[pin] & 0xC000) Serial.write((byte)(pinState[pin] >> 14) & 0x7F);
+        ble_write((byte)pinConfig[pin]);
+	ble_write((byte)pinState[pin] & 0x7F);
+	if (pinState[pin] & 0xFF80) ble_write((byte)(pinState[pin] >> 7) & 0x7F);
+	if (pinState[pin] & 0xC000) ble_write((byte)(pinState[pin] >> 14) & 0x7F);
       }
-      Serial.write(END_SYSEX);
+      ble_write(END_SYSEX);
     }
     break;
   case ANALOG_MAPPING_QUERY:
-    Serial.write(START_SYSEX);
-    Serial.write(ANALOG_MAPPING_RESPONSE);
+    ble_write(START_SYSEX);
+    ble_write(ANALOG_MAPPING_RESPONSE);
     for (byte pin=0; pin < TOTAL_PINS; pin++) {
-      Serial.write(IS_PIN_ANALOG(pin) ? PIN_TO_ANALOG(pin) : 127);
+      ble_write(IS_PIN_ANALOG(pin) ? PIN_TO_ANALOG(pin) : 127);
     }
-    Serial.write(END_SYSEX);
+    ble_write(END_SYSEX);
     break;
   }
 }
@@ -575,12 +594,26 @@ void systemResetCallback()
   // pins with analog capability default to analog input
   // otherwise, pins default to digital output
   for (byte i=0; i < TOTAL_PINS; i++) {
+
+    // skip pin 8, 9 for BLE Shield
+    //if ((i == 8) || (i == 9))
+    //  continue;
+
+    // skip pin 4, 6, 7 for BlendMicro BLE controll
+    if ((i == 4) || (i == 6) || (i == 7))
+      continue;
+    
+    // skip SPI pins
+    if ( (i==MOSI) || (i==MISO) || (i==SCK) || (i==SS) )
+      continue;
+     
+    // Default all to digital pins
     if (IS_PIN_ANALOG(i)) {
       // turns off pullup, configures everything
       setPinModeCallback(i, ANALOG);
     } else {
       // sets the output to 0, configures portConfigInputs
-      setPinModeCallback(i, OUTPUT);
+      //setPinModeCallback(i, OUTPUT);
     }
   }
   // by default, do not report any analog inputs
@@ -599,18 +632,31 @@ void systemResetCallback()
 
 void setup() 
 {
-  Firmata.setFirmwareVersion(FIRMATA_MAJOR_VERSION, FIRMATA_MINOR_VERSION);
+  BleFirmata.setFirmwareVersion(FIRMATA_MAJOR_VERSION, FIRMATA_MINOR_VERSION);
 
-  Firmata.attach(ANALOG_MESSAGE, analogWriteCallback);
-  Firmata.attach(DIGITAL_MESSAGE, digitalWriteCallback);
-  Firmata.attach(REPORT_ANALOG, reportAnalogCallback);
-  Firmata.attach(REPORT_DIGITAL, reportDigitalCallback);
-  Firmata.attach(SET_PIN_MODE, setPinModeCallback);
-  Firmata.attach(START_SYSEX, sysexCallback);
-  Firmata.attach(SYSTEM_RESET, systemResetCallback);
+  BleFirmata.attach(ANALOG_MESSAGE, analogWriteCallback);
+  BleFirmata.attach(DIGITAL_MESSAGE, digitalWriteCallback);
+  BleFirmata.attach(REPORT_ANALOG, reportAnalogCallback);
+  BleFirmata.attach(REPORT_DIGITAL, reportDigitalCallback);
+  BleFirmata.attach(SET_PIN_MODE, setPinModeCallback);
+  BleFirmata.attach(START_SYSEX, sysexCallback);
+  BleFirmata.attach(SYSTEM_RESET, systemResetCallback);
 
-  Firmata.begin(57600);
+  // BleFirmata.begin(57600);
   systemResetCallback();  // reset to default config
+
+  // Enable serial debug
+  Serial.begin(57600);
+  
+  // Default pins set to 9 and 8 for REQN and RDYN
+  // Set your REQN and RDYN here before ble_begin() if you need
+  //ble_set_pins(3, 2);
+  
+  // Set your BLE Shield name here, max. length 10
+  ble_set_name(BLE_NAME);
+  
+  // Init. BLE and start BLE library.
+  ble_begin();
 }
 
 /*==============================================================================
@@ -623,11 +669,11 @@ void loop()
   /* DIGITALREAD - as fast as possible, check for changes and output them to the
    * FTDI buffer using Serial.print()  */
   checkDigitalInputs();  
-
+  
   /* SERIALREAD - processing incoming messagse as soon as possible, while still
    * checking digital inputs.  */
-  while(Firmata.available())
-    Firmata.processInput();
+  while(BleFirmata.available())
+    BleFirmata.processInput();
 
   /* SEND FTDI WRITE BUFFER - make sure that the FTDI buffer doesn't go over
    * 60 bytes. use a timer to sending an event character every 4 ms to
@@ -638,10 +684,13 @@ void loop()
     previousMillis += samplingInterval;
     /* ANALOGREAD - do all analogReads() at the configured sampling interval */
     for(pin=0; pin<TOTAL_PINS; pin++) {
+      if ((pin==8) || (pin==9))
+        continue;
+        
       if (IS_PIN_ANALOG(pin) && pinConfig[pin] == ANALOG) {
         analogPin = PIN_TO_ANALOG(pin);
         if (analogInputsToReport & (1 << analogPin)) {
-          Firmata.sendAnalog(analogPin, analogRead(analogPin));
+          BleFirmata.sendAnalog(analogPin, analogRead(analogPin));
         }
       }
     }
@@ -652,4 +701,10 @@ void loop()
       }
     }
   }
+
+  if (!ble_connected())
+    systemResetCallback();
+    
+  ble_do_events();
 }
+
