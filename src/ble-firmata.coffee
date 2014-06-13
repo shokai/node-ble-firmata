@@ -60,7 +60,6 @@ exports = module.exports = class BLEFirmata extends events.EventEmitter2
       , io_init_wait
 
     @blendmicro = new BlendMicro @peripheral_name
-    console.log @blendmicro
     @blendmicro.once 'open', =>
       cid = setInterval =>
         debug 'request REPORT_VERSION'
