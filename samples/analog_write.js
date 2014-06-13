@@ -1,10 +1,10 @@
-var ArduinoFirmata = require(__dirname+'/../');
-// var ArduinoFirmata = require('arduino-firmata');
+var BLEFirmata = require(__dirname+'/../');
+// var BLEFirmata = require('ble-firmata');
 
-var arduino = new ArduinoFirmata().connect();
+var arduino = new BLEFirmata().connect();
 
 arduino.on('connect', function(){
-  console.log("connect!! "+arduino.serialport_name);
+  console.log("connect!!");
   console.log("board version: "+arduino.boardVersion);
 
   setInterval(function(){

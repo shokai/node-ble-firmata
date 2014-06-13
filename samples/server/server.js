@@ -19,11 +19,10 @@ var app_handler = function(req, res) {
 
 var app = http.createServer(app_handler);
 var io = require('socket.io').listen(app);
-io.set('log level', 2);
 
-// var ArduinoFirmata = require('arduino-firmata');
-var ArduinoFirmata = require('../../');
-arduino = new ArduinoFirmata().connect();
+// var BLEFirmata = require('ble-firmata');
+var BLEFirmata = require('../../');
+arduino = new BLEFirmata().connect();
 
 
 // emit sensor-value to HTML-side
