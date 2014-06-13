@@ -1,28 +1,14 @@
 process.env.NODE_ENV = 'test'
 
-path = require 'path'
+path   = require 'path'
 assert = require 'assert'
-async = require 'async'
+async  = require 'async'
 
-ArduinoFirmata = require path.resolve()
+BLEFirmata = require path.resolve()
 
+describe 'instance of BLEFirmata', ->
 
-describe 'class ArduinoFirmata', ->
-
-  it 'should have method "list"', ->
-    assert.equal typeof ArduinoFirmata['list'], 'function'
-
-  describe 'method list', ->
-
-    it 'should return list of serialports', (done) ->
-      ArduinoFirmata.list (err, devices) ->
-        assert.equal devices instanceof Array, true
-        done()
-
-
-describe 'instance of ArduinoFirmata', ->
-
-  arduino = new ArduinoFirmata()
+  arduino = new BLEFirmata()
 
   it 'should have method "connect"', ->
     assert.equal typeof arduino['connect'], 'function'
@@ -116,8 +102,14 @@ describe 'instance of ArduinoFirmata', ->
   describe 'method "sysex"', ->
 
     it 'should send sysex command', (done) ->
-      arduino.sysex 0x01, [13,3,2]
       arduino.on 'sysex', (e) ->
         assert e.command, 0x01
         assert e.data, [0x01, 0, 3, 0, 2]
+        done()
+      arduino.sysex 0x01, [13,3,2]
+
+  describe 'method "close"', ->
+
+    it 'should close BLE connection', (done) ->
+      arduino.close ->
         done()
