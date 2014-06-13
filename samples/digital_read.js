@@ -8,8 +8,8 @@ arduino.on('connect', function(){
   console.log("board version: "+arduino.boardVersion);
 
   setInterval(function(){
-    arduino.pinMode(7, BLEFirmata.INPUT);
-    var pin_stat = arduino.digitalRead(7);
-    console.log("pin 7 -> "+pin_stat);
+    arduino.pinMode(1, BLEFirmata.INPUT);
+    var pin_stat = arduino.digitalRead(1);
+    console.log("pin 1 -> "+pin_stat);
   }, 100);
 });
