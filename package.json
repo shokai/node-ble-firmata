@@ -36,5 +36,13 @@
   },
   "directories": {
     "test": "tests"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/shokai/node-ble-firmata.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shokai/node-ble-firmata/issues"
+  },
+  "homepage": "https://github.com/shokai/node-ble-firmata"
 }
