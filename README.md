@@ -145,7 +145,7 @@ Test
 
 ### Install SysexLedBlinkFirmata into Arduino
 
-* https://github.com/shokai/ble-arduino-firmata/blob/master/samples/sysex/BLEFirmataWithLedBlink/BLEFirmataWithLedBlink.ino
+* https://github.com/shokai/node-ble-firmata/blob/master/samples/sysex/BLEFirmataWithLedBlink/BLEFirmataWithLedBlink.ino
 
 
 ### Run Test
