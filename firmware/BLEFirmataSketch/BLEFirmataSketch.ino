@@ -578,14 +578,16 @@ void systemResetCallback()
   // otherwise, pins default to digital output
   for (byte i=0; i < TOTAL_PINS; i++) {
 
-    // skip pin 8, 9 for BLE Shield
-    //if ((i == 8) || (i == 9))
-    //  continue;
-
+#if defined(BLEND_MICRO)
     // skip pin 4, 6, 7 for BlendMicro BLE controll
     if ((i == 4) || (i == 6) || (i == 7))
       continue;
-    
+#else
+    // skip pin 8, 9 for BLE Shield
+    if ((i == 8) || (i == 9))
+      continue;
+#endif
+
     // skip SPI pins
     if ( (i==MOSI) || (i==MISO) || (i==SCK) || (i==SS) )
       continue;
