@@ -25,7 +25,7 @@ Requirements
 
 - [BlendMicro](http://redbearlab.squarespace.com/blendmicro)
   - you have to Pin Function. pin 4/6/7 are reserved for BLE controll.
-- [patched Standard Firmata v2.3](./firmware/BLEFirmataSketch/BLEFirmataSketch.ino)
+- Install [patched Standard Firmata v2.3](./firmware/BLEFirmataSketch/BLEFirmataSketch.ino) to BlendMicro
   - fix `#define BLE_NAME "BlendMicro"` if you need.
 
 
