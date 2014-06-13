@@ -1,7 +1,7 @@
 var BLEFirmata = require(__dirname+'/../');
 // var BLEFirmata = require('ble-firmata');
 
-var arduino = new BLEFirmata().connect();
+var arduino = new BLEFirmata().connect("BlendMicro");
 
 arduino.on('connect', function(){
   console.log("connect!!");

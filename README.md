@@ -1,33 +1,32 @@
-arduino-firmata
-===============
-Arduino Firmata protocol (http://firmata.org) implementation on Node.js.
+BLE Firmata
+===========
+Arduino [Firmata](http://firmata.org) implementation on BLE (Bluetooth Low Energy) and Node.js.
 
 - Firmata is a protocol to controll Arduino from software on PC.
-- You can embed Arduino code into Node.js application.
-- Support sharing an Arduino between multiple processes.
-- https://github.com/shokai/node-arduino-firmata
-- https://npmjs.org/package/arduino-firmata
+  - You can embed Arduino code into Node.js application.
+- supports [BlendMicro](http://redbearlab.squarespace.com/blendmicro/).
+  - also should works on [BLE Shield](http://redbearlab.squarespace.com/bleshield/), but I dont't have it.
+
+
+sites
+
+- https://github.com/shokai/node-ble-firmata
+- https://npmjs.org/package/ble-firmata
 
 
 Install
 -------
 
-    % npm install arduino-firmata
+    % npm install ble-firmata
 
 
 Requirements
 ------------
 
-* Arduino (http://arduino.cc)
-  * testing with
-    * Arduino Diecimila
-    * Arduino Duemillanove
-    * Arduino UNO
-    * Arduino Leonardo
-    * Arduino Micro
-    * Seeduino v2
-* Arduino Standard Firmata v2.2
-  * Arduino IDE -> [File] -> [Examples] -> [Firmata] -> [StandardFirmata]
+- [BlendMicro](http://redbearlab.squarespace.com/blendmicro)
+  - you have to Pin Function. pin 4/6/7 are reserved for BLE controll.
+- [patched Standard Firmata v2.3](./firmware/BLEFirmataSketch/BLEFirmataSketch.ino)
+  - fix `#define BLE_NAME "BlendMicro"` if you need.
 
 
 Usage
@@ -35,17 +34,21 @@ Usage
 
 ### Samples
 
-- https://github.com/shokai/node-arduino-firmata/tree/master/samples
+- https://github.com/shokai/ble-arduino-firmata/tree/master/samples
+
 
 ### Setup
 
 Connect
 ```javascript
-var ArduinoFirmata = require('arduino-firmata');
-var arduino = new ArduinoFirmata();
+var BLEFirmata = require('ble-firmata');
+var arduino = new BLEFirmata();
 
-arduino.connect(); // use default arduino
-arduino.connect('/dev/tty.usb-device-name');
+// search device with BLE peripheral name
+arduino.connect("BlendMicro");
+
+// search with default name "BlendMicro"
+arduino.connect();
 
 arduino.on('connect', function(){
 
@@ -76,13 +79,13 @@ arduino.digitalWrite(13, false, callback);
 
 Digital Read
 ```javascript
-arduino.pinMode(7, ArduinoFirmata.INPUT);
-console.log( arduino.digitalRead(7) ); // => true/false
+arduino.pinMode(1, BLEFirmata.INPUT);
+console.log( arduino.digitalRead(1) ); // => true/false
 ```
 
 Digital Read (event)
 ```javascript
-arduino.pinMode(7, ArduinoFirmata.INPUT);
+arduino.pinMode(1, BLEFirmata.INPUT);
 
 arduino.on('digitalChange', function(e){
   console.log("pin" + e.pin + " : " + e.old_value + " -> " + e.value);
@@ -120,7 +123,7 @@ setInterval(function(){
 ### Sysex
 
 - http://firmata.org/wiki/V2.1ProtocolDetails#Sysex_Message_Format
-- https://github.com/shokai/node-arduino-firmata/tree/master/samples/sysex
+- https://github.com/shokai/ble-arduino-firmata/tree/master/samples/sysex
 
 Send
 ```javascript
@@ -141,7 +144,7 @@ Test
 
 ### Install SysexLedBlinkFirmata into Arduino
 
-* https://github.com/shokai/node-arduino-firmata/blob/master/samples/sysex/StandardFirmataWithLedBlink/StandardFirmataWithLedBlink.ino
+* https://github.com/shokai/ble-arduino-firmata/blob/master/samples/sysex/BLEFirmataWithLedBlink/BLEFirmataWithLedBlink.ino
 
 
 ### Run Test
