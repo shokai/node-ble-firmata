@@ -1,16 +1,27 @@
-#include <Firmata.h>
+#define BLE_NAME "BlendMicro"
+
+#include <boards.h>
+#include <SPI.h>
+#include <Servo.h>
+#include <Wire.h>
+#include "BLEFirmata.h"
+#include <RBL_nRF8001.h>
 
 void setup()
 {
-  Firmata.setFirmwareVersion(FIRMATA_MAJOR_VERSION, FIRMATA_MINOR_VERSION);
-  Firmata.attach(START_SYSEX, sysexCallback);
-  Firmata.begin(57600);
+  BleFirmata.setFirmwareVersion(FIRMATA_MAJOR_VERSION, FIRMATA_MINOR_VERSION);
+  BleFirmata.attach(START_SYSEX, sysexCallback);
+
+  ble_set_name(BLE_NAME);
+  ble_begin();
 }
 
 void loop()
 {
-  while(Firmata.available()) {
-    Firmata.processInput();
+  ble_do_events();
+
+  while(BleFirmata.available()) {
+    BleFirmata.processInput();
   }
 }
 
@@ -34,7 +45,7 @@ void sysexCallback(byte command, byte argc, byte*argv)
       digitalWrite(blink_pin, false);
       delay(delayTime);
     }
-    Firmata.sendSysex(command, argc, argv); // callback
+    BleFirmata.sendSysex(command, argc, argv); // callback
     break;
   }
 }
