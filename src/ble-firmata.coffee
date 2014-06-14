@@ -5,11 +5,6 @@ debug = require('debug')('ble-firmata')
 
 exports = module.exports = class BLEFirmata extends events.EventEmitter2
 
-  @Status = {
-    CLOSE: 0
-    OPEN: 1
-  }
-
   @INPUT  = 0
   @OUTPUT = 1
   @ANALOG = 2
@@ -32,7 +27,7 @@ exports = module.exports = class BLEFirmata extends events.EventEmitter2
   @END_SYSEX       = 0xF7 # end a MIDI SysEx message
 
   constructor: ->
-    @status = BLEFirmata.Status.CLOSE
+    @state = 'close'
     @wait_for_data = 0
     @execute_multi_byte_command = 0
     @multi_byte_channel = 0
@@ -47,7 +42,7 @@ exports = module.exports = class BLEFirmata extends events.EventEmitter2
   connect: (@peripheral_name = "BlendMicro") ->
 
     @once 'boardReady', ->
-      debug 'boardReady'
+      debug "boardReady \"#{@peripheral_name}\""
       io_init_wait = 100
       debug "wait #{io_init_wait}(msec)"
       setTimeout =>
@@ -59,34 +54,56 @@ exports = module.exports = class BLEFirmata extends events.EventEmitter2
         @emit 'connect'
       , io_init_wait
 
-    @blendmicro = new BlendMicro @peripheral_name
-    @blendmicro.once 'open', =>
+    unless @ble
+      @ble = new BlendMicro(@peripheral_name)
+    else
+      @ble.open()
+
+    @ble.once 'open', =>
       cid = setInterval =>
         debug 'request REPORT_VERSION'
-        @write [BLEFirmata.REPORT_VERSION]
-      , 500
+        @force_write [BLEFirmata.REPORT_VERSION]
+      , 1000
       @once 'boardVersion', (version) =>
         clearInterval cid
-        @status = BLEFirmata.Status.OPEN
+        @state = 'open'
         @emit 'boardReady'
-      @blendmicro.on 'data', (data) =>
+      @ble.on 'data', (data) =>
         for byte in data
           @process_input byte
+      @ble.once 'close', =>
+        @state = 'close'
+        clearInterval cid
+        @emit 'disconnect'
+        setTimeout =>
+          debug "try re-connect #{@peripheral_name}"
+          @connect @peripheral_name
+        , 1000
 
     return @
 
   isOpen: ->
-    return @status is BLEFirmata.Status.OPEN
+    return @state is 'open'
 
   close: (callback) ->
-    @status = BLEFirmata.Status.CLOSE
-    @blendmicro.close callback
+    @state = 'close'
+    @ble.close callback
 
   reset: (callback) ->
     @write [BLEFirmata.SYSTEM_RESET], callback
 
   write: (bytes, callback) ->
-    @blendmicro.write bytes, callback
+    unless @state is 'open'
+      return
+    @force_write bytes, callback
+
+  force_write: (bytes, callback) ->
+    try
+      unless @ble.state is 'connected'
+        return
+      @ble.write bytes, callback
+    catch err
+      @ble.close
 
   sysex: (command, data=[], callback) ->
     ## http://firmata.org/wiki/V2.1ProtocolDetails#Sysex_Message_Format

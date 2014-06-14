@@ -6,6 +6,10 @@ socket.on('connect', function(){
   socket.on('analogRead', function(v){
     $("#analog").text(v);
   });
+
+  socket.on('bleState', function(v){
+    $("#ble_state").text(v);
+  });
 });
 
 $(function(){

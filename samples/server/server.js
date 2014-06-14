@@ -24,6 +24,15 @@ var io = require('socket.io').listen(app);
 var BLEFirmata = require('../../');
 arduino = new BLEFirmata().connect();
 
+arduino.on('connect', function(){
+  console.log('arduino connect!');
+  io.sockets.emit('bleState', arduino.state);
+});
+
+arduino.on('disconnect', function(){
+  console.log('arduino disconnect!');
+  io.sockets.emit('bleState', arduino.state);
+});
 
 // emit sensor-value to HTML-side
 arduino.on('analogChange', function(e){
@@ -34,6 +43,7 @@ arduino.on('analogChange', function(e){
 
 io.sockets.on('connection', function(socket) {
 
+  socket.emit('bleState', arduino.state);
   socket.emit('analogRead', arduino.analogRead(0));
 
   // on click button on HTML-side, change LED
