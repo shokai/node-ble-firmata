@@ -30,7 +30,7 @@
   "author": "Sho Hashimoto <hashimoto@shokai.org>",
   "license": "MIT",
   "dependencies": {
-    "blendmicro": "~0.0.4",
+    "blendmicro": "*",
     "debug": "*",
     "eventemitter2": "*"
   },
