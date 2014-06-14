@@ -27,6 +27,7 @@ exports = module.exports = class BLEFirmata extends events.EventEmitter2
   @END_SYSEX       = 0xF7 # end a MIDI SysEx message
 
   constructor: ->
+    @reconnect = true
     @state = 'close'
     @wait_for_data = 0
     @execute_multi_byte_command = 0
@@ -60,6 +61,7 @@ exports = module.exports = class BLEFirmata extends events.EventEmitter2
       @ble.open()
 
     @ble.once 'open', =>
+      debug 'BLE open'
       cid = setInterval =>
         debug 'request REPORT_VERSION'
         @force_write [BLEFirmata.REPORT_VERSION]
@@ -74,11 +76,13 @@ exports = module.exports = class BLEFirmata extends events.EventEmitter2
       @ble.once 'close', =>
         @state = 'close'
         clearInterval cid
+        debug 'BLE close'
         @emit 'disconnect'
-        setTimeout =>
-          debug "try re-connect #{@peripheral_name}"
-          @connect @peripheral_name
-        , 1000
+        if @reconnect
+          setTimeout =>
+            debug "try re-connect #{@peripheral_name}"
+            @connect @peripheral_name
+          , 1000
 
     return @
 
