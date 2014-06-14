@@ -1,3 +1,8 @@
+=== 0.1.0 2014-06-14
+
+* re-connect on BLE closed  #2
+* fix samples
+
 === 0.0.2 2014-06-14
 
 * fix samples
