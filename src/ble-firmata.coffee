@@ -30,6 +30,13 @@ exports = module.exports = class BLEFirmata extends events.EventEmitter2
   @I2C_REPLY = 0x77
   @I2C_CONFIG = 0x78
 
+  @I2C_MODES = {
+    WRITE: 0x00,
+    READ: 1,
+    CONTINUOUS_READ: 2,
+    STOP_READING: 3
+  }
+
   constructor: ->
     @reconnect = true
     @state = 'close'
