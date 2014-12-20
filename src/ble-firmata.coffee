@@ -122,17 +122,18 @@ exports = module.exports = class BLEFirmata extends events.EventEmitter2
         concat data, [BLEFirmata.END_SYSEX]
     @write write_data, callback
 
-  sendI2CConfig: (delay, callback) ->
-    delay = delay || 0;
-    data = [(delay & 0xFF), ((delay >> 8) & 0xFF)]
-    @sysex BLEFirmata.I2C_CONFIG, data, callback
+  sendI2CConfig: (delay=0, callback) ->
+    data = [delay, delay >> 8]
+    data = data.map (i) ->
+      return i & 0b11111111
+    write_data = [BLEFirmata.START_SYSEX, BLEFirmata.I2C_CONFIG].
+        concat data, [BLEFirmata.END_SYSEX]
+    @write write_data, callback
 
   sendI2CWriteRequest: (slaveAddress, bytes, callback) ->
-    data = []
-    data[0] = (slaveAddress);
-    data[1] = (BLEFirmata.I2C_MODES.WRITE << 3);
+    data = [slaveAddress, BLEFirmata.I2C_MODES.WRITE << 3]
     bytes.map (i) ->
-      data.concat [(bytes[i] & 0x7F), (bytes[i] >> 7) & 0x7F]
+      data.push i, i >> 7
     @sysex BLEFirmata.I2C_REQUEST, data, callback
 
   pinMode: (pin, mode, callback) ->
