@@ -1,7 +1,7 @@
 {
   "name": "ble-firmata",
   "private": false,
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "BlendMicro & Arduino BLE-Shield Firmata implementation for Node.js",
   "main": "lib/ble-firmata.js",
   "scripts": {
