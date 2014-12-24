@@ -108,6 +108,22 @@ describe 'instance of BLEFirmata', ->
         done()
       arduino.sysex 0x01, [13,3,2]
 
+  it 'should have method "sendI2CConfig"', ->
+    assert.equal typeof arduino['sendI2CConfig'], 'function'
+
+  describe 'method "sendI2CConfig"', ->
+
+    it 'should send I2C config command', ->
+      arduino.sendI2CConfig
+
+  it 'should have method "sendI2CWriteRequest"', ->
+    assert.equal typeof arduino['sendI2CWriteRequest'], 'function'
+
+  describe 'method "sendI2CWriteRequest"', ->
+
+    it 'should send I2C write request command', ->
+      arduino.sendI2CWriteRequest 0x3D, [13,3,2]
+
   describe 'method "close"', ->
 
     it 'should close BLE connection', (done) ->

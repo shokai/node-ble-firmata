@@ -26,6 +26,17 @@ exports = module.exports = class BLEFirmata extends events.EventEmitter2
   @START_SYSEX     = 0xF0 # start a MIDI SysEx message
   @END_SYSEX       = 0xF7 # end a MIDI SysEx message
 
+  @I2C_REQUEST = 0x76
+  @I2C_REPLY = 0x77
+  @I2C_CONFIG = 0x78
+
+  @I2C_MODES = {
+    WRITE: 0x00,
+    READ: 1,
+    CONTINUOUS_READ: 2,
+    STOP_READING: 3
+  }
+
   constructor: ->
     @reconnect = true
     @state = 'close'
@@ -117,6 +128,20 @@ exports = module.exports = class BLEFirmata extends events.EventEmitter2
       [BLEFirmata.START_SYSEX, command].
         concat data, [BLEFirmata.END_SYSEX]
     @write write_data, callback
+
+  sendI2CConfig: (delay=0, callback) ->
+    data = [delay, delay >> 8]
+    data = data.map (i) ->
+      return i & 0b11111111
+    write_data = [BLEFirmata.START_SYSEX, BLEFirmata.I2C_CONFIG].
+        concat data, [BLEFirmata.END_SYSEX]
+    @write write_data, callback
+
+  sendI2CWriteRequest: (slaveAddress, bytes, callback) ->
+    data = [slaveAddress, BLEFirmata.I2C_MODES.WRITE << 3]
+    bytes.map (i) ->
+      data.push i, i >> 7
+    @sysex BLEFirmata.I2C_REQUEST, data, callback
 
   pinMode: (pin, mode, callback) ->
     switch mode
