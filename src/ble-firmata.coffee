@@ -122,25 +122,20 @@ exports = module.exports = class BLEFirmata extends events.EventEmitter2
 
   sysex: (command, data=[], callback) ->
     ## http://firmata.org/wiki/V2.1ProtocolDetails#Sysex_Message_Format
-    data = data.map (i) ->
-      return i & 0b1111111  # 7bit
-    write_data =
-      [BLEFirmata.START_SYSEX, command].
-        concat data, [BLEFirmata.END_SYSEX]
+    data = data.map (i) -> i & 0b1111111  # 7bit
+    write_data = [BLEFirmata.START_SYSEX, command].concat data, [BLEFirmata.END_SYSEX]
     @write write_data, callback
 
   sendI2CConfig: (delay=0, callback) ->
-    data = [delay, delay >> 8]
-    data = data.map (i) ->
-      return i & 0b11111111
-    write_data = [BLEFirmata.START_SYSEX, BLEFirmata.I2C_CONFIG].
-        concat data, [BLEFirmata.END_SYSEX]
+    data = [delay, delay >>> 8]
+    data = data.map (i) -> i & 0b11111111 # 7bit
+    write_data = [BLEFirmata.START_SYSEX, BLEFirmata.I2C_CONFIG].concat data, [BLEFirmata.END_SYSEX]
     @write write_data, callback
 
   sendI2CWriteRequest: (slaveAddress, bytes, callback) ->
     data = [slaveAddress, BLEFirmata.I2C_MODES.WRITE << 3]
     bytes.map (i) ->
-      data.push i, i >> 7
+      data.push i, i >>> 7
     @sysex BLEFirmata.I2C_REQUEST, data, callback
 
   pinMode: (pin, mode, callback) ->
