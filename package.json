@@ -5,7 +5,8 @@
   "description": "BlendMicro & Arduino BLE-Shield Firmata implementation for Node.js",
   "main": "lib/ble-firmata.js",
   "scripts": {
-    "test": "grunt test"
+    "test": "grunt test",
+    "lint": "grunt build"
   },
   "devDependencies": {
     "coffee-errors": "*",

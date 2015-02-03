@@ -1,0 +1,8 @@
+language: node_js
+node_js:
+  - '0.10'
+install: node -e 'console.log(Object.keys(require("./package.json").devDependencies).join(" "))' | xargs npm install
+script: npm run lint
+notifications:
+  slack:
+    secure: KP6jKLbLDQzOdhNJG8p/yTujpSD7+1aLDOBT6u1xiZWcdbauY8euN55KnpSNxUsqTbJu79cC+Mb3Gji4jNmRaqLsOUWmtFPmqvlvDXMStnl2266shcLcNtzXvY9hZCyoYyuc7Bc20JD2RQPRzMqPycI3U6Y/hj8LQ4cg1lZhXlw=
