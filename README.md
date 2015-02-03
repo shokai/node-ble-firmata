@@ -2,6 +2,8 @@ BLE Firmata
 ===========
 Arduino [Firmata](http://firmata.org) implementation on BLE (Bluetooth Low Energy) and Node.js.
 
+[![Build Status](https://travis-ci.org/shokai/node-ble-firmata.svg?branch=master)](https://travis-ci.org/shokai/node-ble-firmata)
+
 - Firmata is a protocol to controll Arduino from software on PC.
   - You can embed Arduino code into Node.js application.
 - supports [BlendMicro](http://redbearlab.squarespace.com/blendmicro/).
