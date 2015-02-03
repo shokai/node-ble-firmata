@@ -1,7 +1,7 @@
 language: node_js
 node_js:
   - '0.10'
-install: npm install --dev
+install: node -e 'console.log(Object.keys(require("./package.json").devDependencies).join(" "))' | xargs npm install
 script: npm run lint
 notifications:
   slack:
