@@ -6,7 +6,8 @@
   "main": "lib/ble-firmata.js",
   "scripts": {
     "test": "grunt test",
-    "lint": "grunt build"
+    "build": "grunt build",
+    "watch": "grunt"
   },
   "devDependencies": {
     "coffee-errors": "*",
