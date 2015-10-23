@@ -38,7 +38,7 @@ exports = module.exports = class BLEFirmata extends events.EventEmitter2
   }
 
   constructor: ->
-    @reconnect = true
+    @ble = null
     @state = 'close'
     @wait_for_data = 0
     @execute_multi_byte_command = 0
@@ -51,9 +51,13 @@ exports = module.exports = class BLEFirmata extends events.EventEmitter2
     @analog_input_data   = [0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0]
     @boardVersion = null
 
-  connect: (@peripheral_name = "BlendMicro") ->
+    @__defineGetter__ "reconnect", =>
+      return @ble?.reconnect
 
-    @once 'boardReady', ->
+    @__defineSetter__ "reconnect", (enable) =>
+      @ble?.reconnect = enable
+
+    @on 'boardReady', ->
       debug "boardReady \"#{@peripheral_name}\""
       io_init_wait = 100
       debug "wait #{io_init_wait}(msec)"
@@ -66,34 +70,36 @@ exports = module.exports = class BLEFirmata extends events.EventEmitter2
         @emit 'connect'
       , io_init_wait
 
-    unless @ble
-      @ble = new BlendMicro(@peripheral_name)
-    else
-      @ble.open()
+  connect: (@peripheral_name = "BlendMicro") ->
+    return if @state isnt "close"
 
-    @ble.once 'open', =>
+    debug "connect(#{@peripheral_name})"
+    if @ble is null
+      @ble = new BlendMicro @peripheral_name
+    else
+      @ble.open @peripheral_name
+
+    @ble.on 'open', =>
       debug 'BLE open'
-      cid = setInterval =>
+      timer_report_version = setInterval =>
         debug 'request REPORT_VERSION'
         @force_write [BLEFirmata.REPORT_VERSION]
       , 1000
+
       @once 'boardVersion', (version) =>
-        clearInterval cid
+        clearInterval timer_report_version
         @state = 'open'
         @emit 'boardReady'
+
       @ble.on 'data', (data) =>
         for byte in data
           @process_input byte
+
       @ble.once 'close', =>
         @state = 'close'
-        clearInterval cid
+        clearInterval timer_report_version
         debug 'BLE close'
         @emit 'disconnect'
-        if @reconnect
-          setTimeout =>
-            debug "try re-connect #{@peripheral_name}"
-            @connect @peripheral_name
-          , 1000
 
     return @
 
@@ -101,15 +107,16 @@ exports = module.exports = class BLEFirmata extends events.EventEmitter2
     return @state is 'open'
 
   close: (callback) ->
+    debug 'close'
     @state = 'close'
+    @ble.removeAllListeners()
     @ble.close callback
 
   reset: (callback) ->
     @write [BLEFirmata.SYSTEM_RESET], callback
 
   write: (bytes, callback) ->
-    unless @state is 'open'
-      return
+    return if @state isnt 'open'
     @force_write bytes, callback
 
   force_write: (bytes, callback) ->

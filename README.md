@@ -141,6 +141,13 @@ arduino.on('sysex', function(e){
 });
 ```
 
+Debug
+-----
+
+set `DEBUG` env var
+
+    % DEBUG=ble-firmata node samples/analog_write.js
+    % DEBUG=*ble* node samples/analog_write.js
 
 Test
 ----
