@@ -1,3 +1,7 @@
+=== 0.2.0 2015-10-24
+
+* bugfixed reconnection  #2
+
 === 0.1.4 2015-07-29
 
 * update blendmicro npm to support OSX Yosemite
