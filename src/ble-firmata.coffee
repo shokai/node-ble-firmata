@@ -58,7 +58,7 @@ exports = module.exports = class BLEFirmata extends events.EventEmitter2
       @ble?.reconnect = enable
 
     @on 'boardReady', ->
-      debug "boardReady \"#{@peripheral_name}\""
+      debug "boardReady \"#{@peripheralName}\""
       io_init_wait = 100
       debug "wait #{io_init_wait}(msec)"
       setTimeout =>
@@ -70,14 +70,14 @@ exports = module.exports = class BLEFirmata extends events.EventEmitter2
         @emit 'connect'
       , io_init_wait
 
-  connect: (@peripheral_name = "BlendMicro") ->
+  connect: (@peripheralName = "BlendMicro") ->
     return if @state isnt "close"
 
-    debug "connect(#{@peripheral_name})"
+    debug "connect(#{@peripheralName})"
     if @ble is null
-      @ble = new BlendMicro @peripheral_name
+      @ble = new BlendMicro @peripheralName
     else
-      @ble.open @peripheral_name
+      @ble.open @peripheralName
 
     @ble.on 'open', =>
       debug 'BLE open'
