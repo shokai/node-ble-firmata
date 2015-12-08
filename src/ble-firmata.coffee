@@ -121,7 +121,7 @@ exports = module.exports = class BLEFirmata extends events.EventEmitter2
 
   force_write: (bytes, callback) ->
     try
-      unless @ble.state is 'connected'
+      unless @ble.state is 'open'
         return
       @ble.write bytes, callback
     catch err
