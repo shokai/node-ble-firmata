@@ -1,7 +1,7 @@
 {
   "name": "ble-firmata",
   "private": false,
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "BlendMicro & Arduino BLE-Shield Firmata implementation for Node.js",
   "main": "lib/ble-firmata.js",
   "scripts": {
@@ -33,7 +33,7 @@
   "author": "Sho Hashimoto <hashimoto@shokai.org>",
   "license": "MIT",
   "dependencies": {
-    "blendmicro": ">=0.3.0",
+    "blendmicro": ">=0.4.0",
     "debug": "*",
     "eventemitter2": "*"
   },
